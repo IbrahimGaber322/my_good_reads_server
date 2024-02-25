@@ -25,7 +25,11 @@ export const signUp = async (req, res) => {
     if (existingUser)
       return res.status(409).json({ message: "This email is already used." });
 
-    const newUser = await User.create({ ...user, admin: false, confirmed:false });
+    const newUser = await User.create({
+      ...user,
+      admin: false,
+      confirmed: false,
+    });
     //nodemailer
     const name = newUser.firstName + " " + newUser.lastName;
     const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
@@ -49,7 +53,7 @@ export const signUp = async (req, res) => {
 
     res.status(200).json("need confirm");
   } catch (error) {
-    res.status(500).json(error.message);
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -61,9 +65,9 @@ export const confirmEmail = async (req, res) => {
     await User.findOneAndUpdate({ _id: id }, { confirmed: true });
     const newToken = jwt.sign({ id }, JWT_SECRET, { expiresIn: "14d" });
 
-    res.json({ token:newToken });
+    res.json({ token: newToken });
   } catch (error) {
-    res.status(500).json("database error");
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -84,7 +88,7 @@ export const login = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json("database error");
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -96,7 +100,7 @@ export const getUserData = async (req, res) => {
     console.log(user.toJSON());
     res.json(user.toJSON());
   } catch (error) {
-    res.status(500).json("database error");
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -141,7 +145,7 @@ export const editProfile = async (req, res) => {
       res.json("Unauthinticated");
     }
   } catch (error) {
-    res.status(500).json("database error");
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -172,7 +176,7 @@ export const forgotPassword = async (req, res) => {
 
     res.status(200).json({ message: "success" });
   } catch (error) {
-    res.status(500).json("database error");
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -188,6 +192,6 @@ export const resetPassword = async (req, res) => {
     await User.findByIdAndUpdate(_id, { password: hashedPassword });
     res.status(200).json({ message: "success" });
   } catch (error) {
-    res.status(500).json("database error");
+    res.status(500).json({ message: error.message });
   }
 };

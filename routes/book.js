@@ -11,17 +11,20 @@ const storage = multer.diskStorage({
       cb(null, 'uploads');
     },
     filename: (req, file, cb) => {
-      const fileExtension = file.originalname.split('.').pop();
-      const randomFilename = uuidv4() + '.' + fileExtension;
-      req.fileName = randomFilename;
-      cb(null, randomFilename);
+      if(typeof file !== "string"){
+        const serverUrl = `${req.protocol}://${req.get("host")}/uploads/`;
+        const fileExtension = file.originalname.split('.').pop();
+        const randomFilename = uuidv4() + '.' + fileExtension;
+        req.filePath = serverUrl+randomFilename;
+        cb(null, randomFilename);
+      }
     },
   });
   const upload = multer({ storage });
 router.get('/', getAllBooks);
 router.get('/:id', getBookById);
 router.post('/',user,admin,upload.single('image'), addBook);
-router.patch('/:id',user,admin, editBook);
+router.patch('/:id',user,admin,upload.single('image'), editBook);
 router.delete('/:id',user, admin, deleteBook);
 
 export default router;

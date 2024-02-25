@@ -1,6 +1,6 @@
 import Book from "../models/book.js";
 import mongoose from "mongoose";
-
+import fs from 'fs';
 import Category from "../models/category.js";
 // GET all books
 export const getAllBooks = async (req, res) => {
@@ -43,18 +43,16 @@ export const getAllBooks = async (req, res) => {
 // POST a new book (must be admin)
 export const addBook = async (req, res) => {
   const data = req.body;
-  const {fileName} = req;
-  try { 
-    const serverUrl = `${req.protocol}://${req.get("host")}/`;
-  
-   
+  const { filePath } = req;
+  try {
     const book = new Book({
       ...data,
       author: new mongoose.Types.ObjectId(data.author),
       category: new mongoose.Types.ObjectId(data.category),
-      image: serverUrl + "uploads/" + fileName,
     });
-
+    if (filePath) {
+      book.image = filePath;
+    }
     const newBook = await book.save();
     res.status(201).json(newBook);
   } catch (error) {
@@ -77,10 +75,24 @@ export const getBookById = async (req, res) => {
 
 // PATCH (edit) book by ID (must be admin)
 export const editBook = async (req, res) => {
+  const data = req.body;
+  const { filePath } = req;
   try {
-    const updatedBook = await Book.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    if (filePath) {
+      data.image = filePath;
+    }
+    const updatedBook = await Book.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...data,
+        author: new mongoose.Types.ObjectId(data.author),
+        category: new mongoose.Types.ObjectId(data.category),
+      },
+      {
+        new: true,
+      }
+    );
+    console.log("updated book:", updatedBook);
     if (!updatedBook) {
       return res.status(404).json({ message: "Book not found" });
     }
@@ -94,8 +106,15 @@ export const editBook = async (req, res) => {
 export const deleteBook = async (req, res) => {
   try {
     const deletedBook = await Book.findByIdAndDelete(req.params.id);
+    delete req.body.image;
     if (!deletedBook) {
       return res.status(404).json({ message: "Book not found" });
+    }
+    const imageUrl = deletedBook.image;
+    if (imageUrl) {
+      const parsedUrl = new URL(imageUrl);
+       const pathAfterHostname = parsedUrl.pathname;
+      await fs.unlink(pathAfterHostname);
     }
     res.status(200).json({ message: "Book deleted successfully" });
   } catch (error) {
