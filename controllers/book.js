@@ -1,6 +1,6 @@
 import Book from "../models/book.js";
 import mongoose from "mongoose";
-import fs from 'fs';
+import fs from "fs/promises";
 import Category from "../models/category.js";
 // GET all books
 export const getAllBooks = async (req, res) => {
@@ -106,15 +106,14 @@ export const editBook = async (req, res) => {
 export const deleteBook = async (req, res) => {
   try {
     const deletedBook = await Book.findByIdAndDelete(req.params.id);
-    delete req.body.image;
     if (!deletedBook) {
       return res.status(404).json({ message: "Book not found" });
     }
     const imageUrl = deletedBook.image;
     if (imageUrl) {
       const parsedUrl = new URL(imageUrl);
-       const pathAfterHostname = parsedUrl.pathname;
-      await fs.unlink(pathAfterHostname);
+      const pathAfterHostname = parsedUrl.pathname;
+      await fs.unlink(pathAfterHostname.slice(1));
     }
     res.status(200).json({ message: "Book deleted successfully" });
   } catch (error) {
