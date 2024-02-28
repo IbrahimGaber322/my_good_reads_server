@@ -12,7 +12,12 @@ export const createCategory = async (req, res) =>{
 }
 export const getAllCategories = async (req, res) => {
     try {
-      const categories = await Category.find();
+      const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+      const categories = await Category.find().limit(limit)
+      .skip(skip);;
       res.json(categories);
     } catch (error) {
       res.status(500).json({ message: error.message });
