@@ -17,13 +17,13 @@ export const getAllBooks = async (req, res) => {
   const { page, limit } = req.query;
   const queryKeys = Object.keys(req.query);
   try {
-    // const Page = Math.max(Number(page) || 1, 1);   
-    const Page = req.query.page * 1 || 1;
-    // const Limit = Math.max(Number(limit) || 10, 1);
-    const Limit = req.query.limit *1 || 10;
+    const Page = Math.max(Number(page) || 1, 1);
+
+    const Limit = Math.max(Number(limit) || 10, 1);
+
     const Skip = (Page - 1) * Limit;
-   
-   const query = {};
+
+    const query = {};
     queryKeys.forEach((key) => {
       if (keys.includes(key)) {
         query[key] = req.query[key];
@@ -32,11 +32,11 @@ export const getAllBooks = async (req, res) => {
     if (query.name) {
       query.name = new RegExp(query.name, "i");
     }
-    if(req.query.page){
-      const numBooks=await Book.countDocuments()
-       if(Skip>=numBooks){
-        throw new Error('this page doesnt exist')
-       }
+    if (req.query.page) {
+      const numBooks = await Book.countDocuments();
+      if (Skip >= numBooks) {
+        throw new Error("this page doesnt exist");
+      }
     }
     const books = await Book.find(query)
       .populate("category", "name")
@@ -104,7 +104,7 @@ export const editBook = async (req, res) => {
       }
     );
     console.log("updated book:", updatedBook);
-        if (!updatedBook) {
+    if (!updatedBook) {
       return res.status(404).json({ message: "Book not found" });
     }
     res.status(200).json(updatedBook);

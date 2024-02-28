@@ -1,240 +1,225 @@
-  import dotenv from "dotenv";
-  dotenv.config();
-  import User from "../models/user.js";
-  import bcrypt from "bcrypt";
-  import jwt from "jsonwebtoken";
-  import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+dotenv.config();
+import User from "../models/user.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
+import mongoose from "mongoose";
 
-  const EMAIL_USER = process.env.EMAIL_USER;
-  const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
-  const JWT_SECRET = process.env.JWT_SECRET;
-  const FRONT_URL = process.env.FRONT_URL;
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
+const JWT_SECRET = process.env.JWT_SECRET;
+const FRONT_URL = process.env.FRONT_URL;
 
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: EMAIL_USER,
-      pass: EMAIL_PASSWORD,
-    },
-  });
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: EMAIL_USER,
+    pass: EMAIL_PASSWORD,
+  },
+});
 
-  export const signUp = async (req, res) => {
-    const user = req.body;
-    try {
-      const existingUser = await User.findOne({ email: user.email });
-      if (existingUser)
-        return res.status(409).json({ message: "This email is already used." });
+export const signUp = async (req, res) => {
+  const user = req.body;
+  try {
+    const existingUser = await User.findOne({ email: user.email });
+    if (existingUser)
+      return res.status(409).json({ message: "This email is already used." });
 
-      const newUser = await User.create({
-        ...user,
-        admin: false,
-        confirmed: false,
-      });
-      //nodemailer
-      const name = newUser.firstName + " " + newUser.lastName;
-      const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
-        expiresIn: "10min",
-      });
+    const newUser = await User.create({
+      ...user,
+      admin: false,
+      confirmed: false,
+    });
 
-      const mailOptions = {
-        from: EMAIL_USER,
-        to: newUser.email,
-        subject: "Confirm your account",
-        html: `<p>Hi ${name},</p><p>Thank you for signing up to our service. Please click on the link below to confirm your account:</p><a href="${FRONT_URL}/confirm/${token}">Confirm your account</a>`,
-      };
+    const name = newUser.firstName + " " + newUser.lastName;
+    const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
+      expiresIn: "10min",
+    });
 
-      transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-          console.log(error);
-        } else {
-          console.log("Email sent: " + info.response);
-        }
-      });
+    const mailOptions = {
+      from: EMAIL_USER,
+      to: newUser.email,
+      subject: "Confirm your account",
+      html: `<p>Hi ${name},</p><p>Thank you for signing up to our service. Please click on the link below to confirm your account:</p><a href="${FRONT_URL}/confirm/${token}">Confirm your account</a>`,
+    };
 
-      res.status(200).json("need confirm");
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
-
-  export const confirmEmail = async (req, res) => {
-    const { token } = req.params;
-    try {
-      const decodedToken = jwt.verify(token, JWT_SECRET);
-      const id = decodedToken.id;
-      await User.findOneAndUpdate({ _id: id }, { confirmed: true });
-      const newToken = jwt.sign({ id }, JWT_SECRET, { expiresIn: "14d" });
-
-      res.json({ token: newToken });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
-
-  export const login = async (req, res) => {
-    const user = req.body;
-
-    try {
-      const foundUser = await User.findOne({ email: user.email });
-      if (!foundUser) {
-        res.status(404).json({ message: "User doesn't exist." });
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log(error);
       } else {
-        const valid = await foundUser.verifyPassword(user.password);
-        if (!valid) return res.json(403);
-        const token = jwt.sign({ id: foundUser._id }, JWT_SECRET, {
-          expiresIn: "24h",
-        });
-        res.json({ token });
+        console.log("Email sent: " + info.response);
       }
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: error.message });
-    }
-  };
+    });
 
-  export const getUserData = async (req, res) => {
-    const { userId } = req;
-    try {
-      const user = await User.findById(userId);
-      if (!user) return res.json(404);
-      console.log(user.toJSON());
-      res.json(user.toJSON());
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
-  export const getUserBooks = async (req, res) => {
-    const { userId } = req;
-    try {
-      const user = await User.findById(userId).populate({
-        path: 'books',
-        populate: {
-          path: 'author',
-          select: 'firstName lastName',
-        },
-      })
-      if (!user) return res.json(404);
-      res.json(user.toJSON());
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
+    res.status(200).json("need confirm");
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-  export const updateUserBooks = async (req, res) => {
-    const { userId } = req;
-    const { bookId, newStatus } = req.body;
-    try {
-      const user = await User.findById(userId);
-  
+export const confirmEmail = async (req, res) => {
+  const { token } = req.params;
+  try {
+    const decodedToken = jwt.verify(token, JWT_SECRET);
+    const id = decodedToken.id;
+    await User.findOneAndUpdate({ _id: id }, { confirmed: true });
+    const newToken = jwt.sign({ id }, JWT_SECRET, { expiresIn: "14d" });
 
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
+    res.json({ token: newToken });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-      const bookIndex = user.books.findIndex((book) => book.equals(bookId));
-  
-      if (bookIndex === -1) {
-        return res.status(404).json({ message: 'Book not found in user\'s collection' });
-      }
-      user.books[bookIndex].shelve = newStatus;
+export const login = async (req, res) => {
+  const user = req.body;
 
-      await user.save();
-      
-      res.status(200).json(user);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Internal Server Error' });
-    }
-  };
-  
-  export const editProfile = async (req, res) => {
-    const user = req.body;
-    const { token, userEmail } = req;
-
-    try {
-      if (user?.email === userEmail) {
-        const editedUser = await User.findOneAndUpdate(
-          { email: user.email },
-          user,
-          {
-            new: true,
-          }
-        );
-
-        const {
-          name,
-          picture,
-          email,
-          firstName,
-          lastName,
-          friends,
-          requests,
-          cover,
-          about,
-        } = editedUser;
-        res.status(200).json({
-          token,
-          name,
-          picture,
-          email,
-          firstName,
-          lastName,
-          friends,
-          requests,
-          cover,
-          about,
-        });
-      } else {
-        res.json("Unauthinticated");
-      }
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
-
-  export const forgotPassword = async (req, res) => {
-    const { userEmail } = req.body;
-
-    try {
-      const user = await User.findOne({ email: userEmail });
-      if (!user)
-        return res.status(400).json({ message: "no user with this email" });
-      const { name, email, _id } = user;
-      const token = jwt.sign({ _id: _id }, "test", { expiresIn: "5min" });
-
-      const mailOptions = {
-        from: EMAIL_USER,
-        to: email,
-        subject: "Reset your password",
-        html: `<p>Hi ${name}, Please click on the link below to reset your password:</p><a href="https://webweave.onrender.com/resetpassword/${token}">Reset your password</a>`,
-      };
-
-      transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-          console.log(error);
-        } else {
-          console.log("Email sent: " + info.response);
-        }
+  try {
+    const foundUser = await User.findOne({ email: user.email });
+    if (!foundUser) {
+      res.status(404).json({ message: "User doesn't exist." });
+    } else {
+      const valid = await foundUser.verifyPassword(user.password);
+      if (!valid) return res.json(403);
+      const token = jwt.sign({ id: foundUser._id }, JWT_SECRET, {
+        expiresIn: "24h",
       });
-
-      res.status(200).json({ message: "success" });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+      res.json({ token });
     }
-  };
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
-  export const resetPassword = async (req, res) => {
-    const { password, token } = req.body;
+export const getUserData = async (req, res) => {
+  const { user } = req;
+  try {
+    res.json(user.toJSON());
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+export const getUserBooks = async (req, res) => {
+  const { user } = req;
+  try {
+    const userData = await User.findById(user._id).populate({
+      path: "books",
+      populate: {
+        path: "author",
+        select: "firstName lastName",
+      },
+    });
+    res.json(userData.toJSON());
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-    try {
-      const decodedToken = jwt.verify(token, "test");
-      const _id = decodedToken._id;
-      const user = await User.findById(_id);
+export const addUserBook = async (req, res) => {
+  const { user } = req;
+  const { books } = user;
+  const { bookId } = req.body;
+  try {
+    if (books.some((book) => book.bookId == bookId))
+      return res.status(403).json({ message: "Book already added" });
 
-      const hashedPassword = await bcrypt.hash(password, 12);
-      await User.findByIdAndUpdate(_id, { password: hashedPassword });
-      res.status(200).json({ message: "success" });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+    user.books.push({ bookId: new mongoose.Types.ObjectId(bookId) });
+    await user.save();
+    res.json(user.toJSON());
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateUserBooks = async (req, res) => {
+  const { user } = req;
+  const { books } = user;
+  const { bookId, status } = req.body;
+  try {
+    const bookIndex = books.findIndex((book) => book.bookId.equals(bookId));
+    if (bookIndex === -1) {
+      return res.status(404).json({ message: "Book not found collection" });
     }
-  };
+    if (status) user.books[bookIndex].shelve = status;
+
+    await user.save();
+
+    res.status(200).json(user.toJSON());
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const editProfile = async (req, res) => {
+  const { user } = req;
+  const { firstName, lastName, image } = req.body;
+  try {
+    const updatedUser = new User({ ...user, firstName, lastName, image });
+    await updatedUser.save();
+    res.json(updatedUser.toJSON());
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  const { userEmail } = req.body;
+
+  try {
+    const user = await User.findOne({ email: userEmail });
+    if (!user)
+      return res.status(400).json({ message: "no user with this email" });
+    const { name, email, _id } = user;
+    const token = jwt.sign({ _id: _id }, JWT_SECRET, { expiresIn: "5min" });
+
+    const mailOptions = {
+      from: EMAIL_USER,
+      to: email,
+      subject: "Reset your password",
+      html: `<p>Hi ${name}, Please click on the link below to reset your password:</p><a href="${FRONT_URL}/resetpassword/${token}">Reset your password</a>`,
+    };
+
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
+
+    res.status(200).json({ message: "success" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  const { password, token } = req.body;
+
+  try {
+    const decodedToken = jwt.verify(token, JWT_SECRET);
+    const _id = decodedToken._id;
+    const user = await User.findById(_id);
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    await User.findByIdAndUpdate(_id, { password: hashedPassword });
+    res.status(200).json({ message: "success" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const editUser = async (req, res) => {
+  const { userId, admin } = req.body;
+  try {
+    if (typeof admin !== "boolean")
+      return res.status(422).json({ message: "Wrong data type for admin." });
+    const user = await User.findByIdAndUpdate({ _id: userId }, { admin });
+    if (!user) res.status(404).json({ message: "User not found." });
+    res.status(200).json({ message: `User ${user.email} is now an admin` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -9,7 +9,6 @@ const emailValidator = (value) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 };
 
-
 const userSchema = mongoose.Schema(
   {
     firstName: {
@@ -43,16 +42,18 @@ const userSchema = mongoose.Schema(
       required: true,
     },
     image: String,
-    books: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book",
-    shelve :{
-      type: String,
-      default: "Want to read",
-      enum: ["Want to read", "Read", "Currently Reading"],
-    }
-   }
-  ],
+    books: [
+      {
+        bookId: { type: mongoose.Schema.Types.ObjectId, ref: "Book" },
+        shelve: {
+          type: String,
+          default: "Want to read",
+          enum: ["Want to read", "Read", "Currently Reading"],
+        },
+      },
+    ],
     admin: { type: Boolean, default: false },
-    confirmed: { type: Boolean, default: false }
+    confirmed: { type: Boolean, default: false },
   },
   {
     timestamps: true,
