@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
+import counterSchema from "./counter.js";
 
 const bookSchema = mongoose.Schema({
+  id: { type: Number, unique: true },
   name: {
     type: String,
     require: true,
@@ -30,6 +32,24 @@ const bookSchema = mongoose.Schema({
   image: String,
   reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
   clicks: Number,
+});
+
+const BookCounter = mongoose.model("BookCounter", counterSchema);
+bookSchema.pre("save", function (next) {
+  const doc = this;
+  BookCounter.findByIdAndUpdate(
+    { _id: "bookId" },
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true }
+  )
+    .then(function (counter) {
+      doc.id = counter.seq;
+      next();
+    })
+    .catch(function (error) {
+      console.error("Counter.findByIdAndUpdate error: ", error);
+      throw error;
+    });
 });
 
 const Book = mongoose.model("Book", bookSchema);

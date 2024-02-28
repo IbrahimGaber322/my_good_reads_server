@@ -32,18 +32,18 @@ export const getAllBooks = async (req, res) => {
     if (query.name) {
       query.name = new RegExp(query.name, "i");
     }
-    if (req.query.page) {
-      const numBooks = await Book.countDocuments();
-      if (Skip >= numBooks) {
-        throw new Error("this page doesnt exist");
-      }
+
+    const booksCount = await Book.countDocuments();
+    if (Skip >= booksCount) {
+      return res.status(404).json({ message: "this page doesnt exist" });
     }
+
     const books = await Book.find(query)
       .populate("category", "name")
       .populate("author", "firstName lastName")
       .limit(Limit)
       .skip(Skip);
-    res.status(200).json(books);
+    res.status(200).json({ books, booksCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

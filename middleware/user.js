@@ -7,7 +7,7 @@ const user = (req, res, next) => {
     if (token) {
       jwt.verify(token, JWT_SECRET, async (err, decoded) => {
         if (err) {
-          res.json(403);
+          res.status(401).json({ message: "Must be logged in." });
         } else {
           try {
             const foundUser = await User.findById(decoded?.id);
@@ -21,7 +21,7 @@ const user = (req, res, next) => {
         }
       });
     } else {
-      res.json(403);
+      res.status(401).json({ message: "Token missing." });
     }
   } catch (error) {
     console.log(error);

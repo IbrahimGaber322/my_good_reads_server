@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import mongoose from "mongoose";
+import Book from "../models/book.js";
 
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
@@ -77,16 +78,15 @@ export const login = async (req, res) => {
 
   try {
     const foundUser = await User.findOne({ email: user.email });
-    if (!foundUser) {
-      res.status(404).json({ message: "User doesn't exist." });
-    } else {
-      const valid = await foundUser.verifyPassword(user.password);
-      if (!valid) return res.json(403);
-      const token = jwt.sign({ id: foundUser._id }, JWT_SECRET, {
-        expiresIn: "24h",
-      });
-      res.json({ token });
-    }
+    if (!foundUser)
+      return res.status(404).json({ message: "User doesn't exist." });
+
+    const valid = await foundUser.verifyPassword(user.password);
+    if (!valid) return res.json(403);
+    const token = jwt.sign({ id: foundUser._id }, JWT_SECRET, {
+      expiresIn: "24h",
+    });
+    res.json({ token });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: error.message });
@@ -122,6 +122,8 @@ export const addUserBook = async (req, res) => {
   const { books } = user;
   const { bookId } = req.body;
   try {
+    const book = await Book.findById(bookId);
+    if (!book) return res.status(404).json({ message: "Book doesn't exist" });
     if (books.some((book) => book.bookId == bookId))
       return res.status(403).json({ message: "Book already added" });
 
@@ -205,7 +207,7 @@ export const resetPassword = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 12);
     await User.findByIdAndUpdate(_id, { password: hashedPassword });
-    res.status(200).json({ message: "success" });
+    res.status(200).json({ message: "Password updated successfuly." });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -219,6 +221,23 @@ export const editUser = async (req, res) => {
     const user = await User.findByIdAndUpdate({ _id: userId }, { admin });
     if (!user) res.status(404).json({ message: "User not found." });
     res.status(200).json({ message: `User ${user.email} is now an admin` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getUsers = async (req, res) => {
+  try {
+    const { page, limit } = req.query;
+    const Page = Math.max(Number(page) || 1, 1);
+    const Limit = Math.max(Number(limit) || 10, 1);
+    const Skip = (Page - 1) * Limit;
+    const users = User.find({});
+    const usersCount = await User.countDocuments();
+    if (Skip >= booksCount) {
+      return res.status(404).json({ message: "this page doesnt exist" });
+    }
+    res.json({ users, usersCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
