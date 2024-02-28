@@ -25,6 +25,7 @@ export const getAllCategories = async (req, res) => {
     }
 
     const categories = await Category.find().limit(Limit).skip(Skip);
+    console.log(categoriesCount)
     res.json({ categories, categoriesCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
