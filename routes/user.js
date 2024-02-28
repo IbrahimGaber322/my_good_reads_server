@@ -1,5 +1,5 @@
 import express from "express";
-import { confirmEmail, login, signUp,getUserData } from "../controllers/user.js";
+import { confirmEmail, login, signUp,getUserData,getUserBooks,updateUserBooks } from "../controllers/user.js";
 import user from "../middleware/user.js";
 const router = express.Router();
 
@@ -15,7 +15,9 @@ router.get("/me", user ,getUserData);
 
 /* router.delete("/users/:id", middlware, deleteUser); */
 
-/* router.get("/books", getUserBooks); */
+ router.get("/books",user, getUserBooks); 
+ router.patch('/books', user,updateUserBooks);
+
 
 router.get("/confirm/:token", confirmEmail);
 

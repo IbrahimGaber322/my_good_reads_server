@@ -43,7 +43,14 @@ const userSchema = mongoose.Schema(
       required: true,
     },
     image: String,
-    books: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book" }],
+    books: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book",
+    shelve :{
+      type: String,
+      default: "Want to read",
+      enum: ["Want to read", "Read", "Currently Reading"],
+    }
+   }
+  ],
     admin: { type: Boolean, default: false },
     confirmed: { type: Boolean, default: false }
   },
