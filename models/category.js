@@ -9,10 +9,7 @@ const categorySchema = mongoose.Schema({
     type: String,
     require: true,
     min: [3, "Min length 3 chars."],
-    validate: {
-      validator: nameValidator,
-      message: "Category name must contain only alphabetical characters",
-    },
+    max: [50,  "Max length 50 chars."]
   },
 });
 
