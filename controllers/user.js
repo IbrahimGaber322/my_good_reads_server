@@ -18,44 +18,45 @@
     },
   });
 
-  export const signUp = async (req, res) => {
-    const user = req.body;
-    try {
-      const existingUser = await User.findOne({ email: user.email });
-      if (existingUser)
-        return res.status(409).json({ message: "This email is already used." });
+      export const signUp = async (req, res) => {
+        const user = req.body;
+        console.log(user)
+        console.log(req)
+        try {
+          const existingUser = await User.findOne({ email: user.email });
+          if (existingUser)
+            return res.status(409).json({ message: "This email is already used." });
 
-      const newUser = await User.create({
-        ...user,
-        admin: false,
-        confirmed: false,
-      });
-      //nodemailer
-      const name = newUser.firstName + " " + newUser.lastName;
-      const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
-        expiresIn: "10min",
-      });
+          const newUser = await User.create({
+            ...user,
+            admin: false,
+            confirmed: false,
+          });
+          //nodemailer
+          const name = newUser.firstName + " " + newUser.lastName;
+          const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
+            expiresIn: "10min",
+          });
+          const mailOptions = {
+            from: EMAIL_USER,
+            to: newUser.email,
+            subject: "Confirm your account",
+            html: `<p>Hi ${name},</p><p>Thank you for signing up to our service. Please click on the link below to confirm your account:</p><a href="${FRONT_URL}/confirm/${token}">Confirm your account</a>`,
+          };
 
-      const mailOptions = {
-        from: EMAIL_USER,
-        to: newUser.email,
-        subject: "Confirm your account",
-        html: `<p>Hi ${name},</p><p>Thank you for signing up to our service. Please click on the link below to confirm your account:</p><a href="${FRONT_URL}/confirm/${token}">Confirm your account</a>`,
-      };
+          transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+              console.log(error);
+            } else {
+              console.log("Email sent: " + info.response);
+            }
+          });
 
-      transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-          console.log(error);
-        } else {
-          console.log("Email sent: " + info.response);
+          res.status(200).json("need confirm");
+        } catch (error) {
+          res.status(500).json({ message: error.message });
         }
-      });
-
-      res.status(200).json("need confirm");
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
+      };
 
   export const confirmEmail = async (req, res) => {
     const { token } = req.params;
