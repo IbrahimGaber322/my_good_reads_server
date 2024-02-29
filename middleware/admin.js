@@ -2,7 +2,6 @@ import User from "../models/user.js";
 const admin = async (req, res, next) => {
   try {
     const { user } = req;
-    console.log(user);
     if (user.admin) {
       next();
     } else {

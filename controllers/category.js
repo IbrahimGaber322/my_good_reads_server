@@ -2,7 +2,6 @@ import Category from "../models/category.js";
 import Book from "../models/book.js";
 
 export const createCategory = async (req, res) => {
-  console.log(req.body);
   try {
     const category = await Category.create(req.body);
     res.json(category);

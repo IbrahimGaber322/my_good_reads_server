@@ -4,7 +4,6 @@ export const createAuthor = async (req, res) => {
   const { filePath } = req;
   try {
     const author = new Author(req.body);
-    console.log(req.body);
     if (filePath) {
       author.image = filePath;
     }

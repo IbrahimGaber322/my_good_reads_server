@@ -38,7 +38,6 @@ export const getAllBooks = async (req, res) => {
     if (Skip >= booksCount) {
       return res.status(404).json({ message: "this page doesnt exist" });
     }
- 
     const books = await Book.find(query)
       .populate("category", "name")
       .populate("author", "firstName lastName")
@@ -104,7 +103,6 @@ export const editBook = async (req, res) => {
         new: true,
       }
     );
-    console.log("updated book:", updatedBook);
     if (!updatedBook) {
       return res.status(404).json({ message: "Book not found" });
     }

@@ -103,7 +103,8 @@ export const getUserData = async (req, res) => {
 };
 export const getUserBooks = async (req, res) => {
   const { user } = req;
-  const { page, limit } = req.query;
+  const { page, limit, shelve } = req.query;
+
   try {
     const Page = Math.max(Number(page) || 1, 1);
     const Limit = Math.max(Number(limit) || 10, 1);
@@ -122,6 +123,9 @@ export const getUserBooks = async (req, res) => {
         select: "firstName lastName",
       },
     });
+    if (shelve) {
+      userData.books = userData.books.filter((book) => book.shelve === shelve);
+    }
     res.json({ books: userData.books, booksCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
