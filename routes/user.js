@@ -8,17 +8,18 @@ import {
   updateUserBooks,
   addUserBook,
   editProfile,
-  editUser
+  editUser,
+  getUsers
 } from "../controllers/user.js";
 import user from "../middleware/user.js";
 import admin from "../middleware/admin.js";
 const router = express.Router();
 
 /* ------------ */
-/* router.get("/", getAllUsers);
-router.get("/:id", getUser); */
-/* ------------ */
 
+/* router.get("/:id", getUser);  */
+/* ------------ */
+router.get("/", getUsers);  
 router.post("/", signUp);
 router.patch("/", user, admin, editUser);
 router.post("/login", login);

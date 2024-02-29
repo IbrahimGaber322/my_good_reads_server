@@ -227,14 +227,15 @@ export const editUser = async (req, res) => {
 };
 
 export const getUsers = async (req, res) => {
+  console.log("getUsers")
   try {
     const { page, limit } = req.query;
     const Page = Math.max(Number(page) || 1, 1);
     const Limit = Math.max(Number(limit) || 10, 1);
     const Skip = (Page - 1) * Limit;
-    const users = User.find({});
+    const users = await User.find({});
     const usersCount = await User.countDocuments();
-    if (Skip >= booksCount) {
+    if (Skip >= usersCount) {
       return res.status(404).json({ message: "this page doesnt exist" });
     }
     res.json({ users, usersCount });
