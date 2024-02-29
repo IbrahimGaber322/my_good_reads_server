@@ -151,7 +151,11 @@ export const updateUserBooks = async (req, res) => {
   const { books } = user;
   const { bookId, status } = req.body;
   try {
-    const bookIndex = books.findIndex((book) => book.bookId.equals(bookId));
+    const bookIndex = books
+      .map((book) => book._id.toString())
+      .findIndex((id) => {
+        return id == bookId.toString();
+      });
     if (bookIndex === -1) {
       return res.status(404).json({ message: "Book not found collection" });
     }
@@ -159,7 +163,7 @@ export const updateUserBooks = async (req, res) => {
 
     await user.save();
 
-    res.status(200).json(user.toJSON());
+    res.status(200).json({ messgae: "Status updated successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
