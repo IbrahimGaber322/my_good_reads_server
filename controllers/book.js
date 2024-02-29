@@ -1,6 +1,6 @@
 import Book from "../models/book.js";
 import mongoose from "mongoose";
-import fs from 'fs';
+import fs from "fs/promises";
 import Category from "../models/category.js";
 // GET all books
 export const getAllBooks = async (req, res) => {
@@ -17,13 +17,13 @@ export const getAllBooks = async (req, res) => {
   const { page, limit } = req.query;
   const queryKeys = Object.keys(req.query);
   try {
-    // const Page = Math.max(Number(page) || 1, 1);   
-    const Page = req.query.page * 1 || 1;
-    // const Limit = Math.max(Number(limit) || 10, 1);
-    const Limit = req.query.limit *1 || 10;
+    const Page = Math.max(Number(page) || 1, 1);
+
+    const Limit = Math.max(Number(limit) || 10, 1);
+
     const Skip = (Page - 1) * Limit;
-   
-   const query = {};
+
+    const query = {};
     queryKeys.forEach((key) => {
       if (keys.includes(key)) {
         query[key] = req.query[key];
@@ -32,18 +32,18 @@ export const getAllBooks = async (req, res) => {
     if (query.name) {
       query.name = new RegExp(query.name, "i");
     }
-    if(req.query.page){
-      const numBooks=await Book.countDocuments()
-       if(Skip>=numBooks){
-        throw new Error('this page doesnt exist')
-       }
+
+    const booksCount = await Book.countDocuments();
+    if (Skip >= booksCount) {
+      return res.status(404).json({ message: "this page doesnt exist" });
     }
+
     const books = await Book.find(query)
       .populate("category", "name")
       .populate("author", "firstName lastName")
       .limit(Limit)
       .skip(Skip);
-    res.status(200).json(books);
+    res.status(200).json({ books, booksCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -72,7 +72,9 @@ export const addBook = async (req, res) => {
 // GET book by ID
 export const getBookById = async (req, res) => {
   try {
-    const book = await Book.findById(req.params.id);
+    const book = await Book.findById(req.params.id)
+      .populate("category", "name")
+      .populate("author", "firstName lastName");
     if (!book) {
       return res.status(404).json({ message: "Book not found" });
     }
@@ -102,7 +104,7 @@ export const editBook = async (req, res) => {
       }
     );
     console.log("updated book:", updatedBook);
-        if (!updatedBook) {
+    if (!updatedBook) {
       return res.status(404).json({ message: "Book not found" });
     }
     res.status(200).json(updatedBook);
@@ -115,15 +117,14 @@ export const editBook = async (req, res) => {
 export const deleteBook = async (req, res) => {
   try {
     const deletedBook = await Book.findByIdAndDelete(req.params.id);
-    delete req.body.image;
     if (!deletedBook) {
       return res.status(404).json({ message: "Book not found" });
     }
     const imageUrl = deletedBook.image;
     if (imageUrl) {
       const parsedUrl = new URL(imageUrl);
-       const pathAfterHostname = parsedUrl.pathname;
-      await fs.unlink(pathAfterHostname);
+      const pathAfterHostname = parsedUrl.pathname;
+      await fs.unlink(pathAfterHostname.slice(1));
     }
     res.status(200).json({ message: "Book deleted successfully" });
   } catch (error) {
