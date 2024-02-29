@@ -105,10 +105,10 @@ export const getUserBooks = async (req, res) => {
   const { user } = req;
   try {
     const userData = await User.findById(user._id).populate({
-      path: "books",
-      populate: {
-        path: "author",
-        select: "firstName lastName",
+      path: 'books.bookId', populate: {
+        path: 'author',
+        model: 'Author', 
+        select: 'firstName lastName', 
       },
     });
     res.json(userData.toJSON());
