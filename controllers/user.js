@@ -103,15 +103,26 @@ export const getUserData = async (req, res) => {
 };
 export const getUserBooks = async (req, res) => {
   const { user } = req;
+  const { page, limit } = req.query;
   try {
-    const userData = await User.findById(user._id).populate({
-      path: 'books.bookId', populate: {
-        path: 'author',
-        model: 'Author', 
-        select: 'firstName lastName', 
+    const Page = Math.max(Number(page) || 1, 1);
+    const Limit = Math.max(Number(limit) || 10, 1);
+    const Skip = (Page - 1) * Limit;
+    const booksCount = user.books.length;
+    if (Skip >= booksCount) {
+      return res.status(404).json({ message: "this page doesnt exist" });
+    }
+    const userData = await User.findById(user._id, {
+      books: { $slice: [Skip, Limit] },
+    }).populate({
+      path: "books.bookId",
+      populate: {
+        path: "author",
+        model: "Author",
+        select: "firstName lastName",
       },
     });
-    res.json(userData.toJSON());
+    res.json({ books: userData.books, booksCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -227,7 +238,6 @@ export const editUser = async (req, res) => {
 };
 
 export const getUsers = async (req, res) => {
-  console.log("getUsers")
   try {
     const { page, limit } = req.query;
     const Page = Math.max(Number(page) || 1, 1);
