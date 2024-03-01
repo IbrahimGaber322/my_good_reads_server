@@ -3,7 +3,7 @@ import userRoutes from "./user.js";
 import bookRoutes from "./book.js";
 import categoryRoutes from "./category.js";
 import authorRoutes from "./author.js";
-import reviewsRoutes from "./reviewsRoutes.js";
+import reviewsRoutes from "./review.js";
 
 const router = express.Router();
 

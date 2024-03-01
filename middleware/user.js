@@ -24,7 +24,7 @@ const user = (req, res, next) => {
       res.status(401).json({ message: "Token missing." });
     }
   } catch (error) {
-    console.log(error);
+    res.status(500).json({ message: "Database error, try again later." });
   }
 };
 

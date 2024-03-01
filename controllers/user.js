@@ -42,7 +42,6 @@ export const signUp = async (req, res) => {
         confirmed: false,
       });
     }
-    console.log(newUser);
     const name = newUser.firstName + " " + newUser.lastName;
     const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
       expiresIn: "10min",
@@ -94,14 +93,14 @@ export const login = async (req, res) => {
         .json({ message: "Email or password are not correct." });
 
     if (!foundUser.confirmed) {
-      const name = newUser.firstName + " " + newUser.lastName;
-      const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
+      const name = foundUser.firstName + " " + foundUser.lastName;
+      const token = jwt.sign({ id: foundUser._id }, JWT_SECRET, {
         expiresIn: "10min",
       });
 
       const mailOptions = {
         from: EMAIL_USER,
-        to: newUser.email,
+        to: foundUser.email,
         subject: "Confirm your account",
         html: `<p>Hi ${name},</p><p>Thank you for signing up to our service. Please click on the link below to confirm your account:</p><a href="${FRONT_URL}/confirm/${token}">Confirm your account</a>`,
       };
@@ -115,10 +114,10 @@ export const login = async (req, res) => {
       });
 
       return res
-        .status(401)
-        .json(
-          `Your email needs to be confirmed, confirmation email sent to ${user.email}`
-        );
+        .status(200)
+        .json({
+          message: `Your email needs to be confirmed, confirmation email sent to ${user.email}`,
+        });
     }
 
     const valid = await foundUser.verifyPassword(user.password);
@@ -131,7 +130,6 @@ export const login = async (req, res) => {
     });
     res.json({ token });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: error.message });
   }
 };
