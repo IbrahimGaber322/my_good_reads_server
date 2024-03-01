@@ -13,7 +13,7 @@ const FRONT_URL = process.env.FRONT_URL;
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use('/uploads', express.static('uploads'));
-app.use(cors());
+app.use(cors('*'));
 
 
 app.use("/", routes);
