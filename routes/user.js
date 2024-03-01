@@ -9,26 +9,24 @@ import {
   addUserBook,
   editProfile,
   editUser,
-  getUsers
+  getUsers,
 } from "../controllers/user.js";
 import user from "../middleware/user.js";
 import admin from "../middleware/admin.js";
+import upload from '../middleware/upload.js';
 const router = express.Router();
 
 /* ------------ */
 
 /* router.get("/:id", getUser);  */
 /* ------------ */
-router.get("/", getUsers);  
-router.post("/", signUp);
+router.get("/", getUsers);
+router.post("/", upload.single("image"), signUp);
 router.patch("/", user, admin, editUser);
 router.post("/login", login);
 
 router.get("/me", user, getUserData);
 router.patch("/me", user, editProfile);
-
-
-
 
 router.post("/books", user, addUserBook);
 router.get("/books", user, getUserBooks);

@@ -16,7 +16,6 @@ export const getAllBooks = async (req, res) => {
   ];
   const { page, limit } = req.query;
   const queryKeys = Object.keys(req.query);
-   console.log(req.query)
   try {
     const Page = Math.max(Number(page) || 1, 1);
 
@@ -33,7 +32,7 @@ export const getAllBooks = async (req, res) => {
     if (query.name) {
       query.name = new RegExp(query.name, "i");
     }
-  
+
     const booksCount = await Book.countDocuments();
     if (Skip >= booksCount) {
       return res.status(404).json({ message: "this page doesnt exist" });

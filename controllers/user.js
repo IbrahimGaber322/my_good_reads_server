@@ -22,17 +22,27 @@ const transporter = nodemailer.createTransport({
 
 export const signUp = async (req, res) => {
   const user = req.body;
+  const { filePath } = req;
   try {
     const existingUser = await User.findOne({ email: user.email });
-    if (existingUser)
+    if (existingUser?.confirmed)
       return res.status(409).json({ message: "This email is already used." });
 
-    const newUser = await User.create({
-      ...user,
-      admin: false,
-      confirmed: false,
-    });
+    if (filePath) {
+      user.image = filePath;
+    }
 
+    let newUser = {};
+    if (existingUser) {
+      newUser = existingUser;
+    } else {
+      newUser = await User.create({
+        ...user,
+        admin: false,
+        confirmed: false,
+      });
+    }
+    console.log(newUser);
     const name = newUser.firstName + " " + newUser.lastName;
     const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
       expiresIn: "10min",
@@ -67,7 +77,7 @@ export const confirmEmail = async (req, res) => {
     await User.findOneAndUpdate({ _id: id }, { confirmed: true });
     const newToken = jwt.sign({ id }, JWT_SECRET, { expiresIn: "14d" });
 
-    res.json({ token: newToken });
+    res.json({ token: newToken, message: "Successfuly confirmed." });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -79,10 +89,34 @@ export const login = async (req, res) => {
   try {
     const foundUser = await User.findOne({ email: user.email });
     if (!foundUser)
-      return res.status(404).json({ message: "User doesn't exist." });
+      return res.status(404).json({ message: "Email or password are not correct." });
+
+    if (!foundUser.confirmed) {
+      const name = newUser.firstName + " " + newUser.lastName;
+      const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
+        expiresIn: "10min",
+      });
+
+      const mailOptions = {
+        from: EMAIL_USER,
+        to: newUser.email,
+        subject: "Confirm your account",
+        html: `<p>Hi ${name},</p><p>Thank you for signing up to our service. Please click on the link below to confirm your account:</p><a href="${FRONT_URL}/confirm/${token}">Confirm your account</a>`,
+      };
+
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log("Email sent: " + info.response);
+        }
+      });
+
+      return res.status(401).json(`Your email needs to be confirmed, confirmation email sent to ${user.email}`);
+    }
 
     const valid = await foundUser.verifyPassword(user.password);
-    if (!valid) return res.json(403);
+    if (!valid) return res.status(403).json({ message: "Email or password are not correct." });
     const token = jwt.sign({ id: foundUser._id }, JWT_SECRET, {
       expiresIn: "24h",
     });
