@@ -89,7 +89,9 @@ export const login = async (req, res) => {
   try {
     const foundUser = await User.findOne({ email: user.email });
     if (!foundUser)
-      return res.status(404).json({ message: "Email or password are not correct." });
+      return res
+        .status(404)
+        .json({ message: "Email or password are not correct." });
 
     if (!foundUser.confirmed) {
       const name = newUser.firstName + " " + newUser.lastName;
@@ -112,11 +114,18 @@ export const login = async (req, res) => {
         }
       });
 
-      return res.status(401).json(`Your email needs to be confirmed, confirmation email sent to ${user.email}`);
+      return res
+        .status(401)
+        .json(
+          `Your email needs to be confirmed, confirmation email sent to ${user.email}`
+        );
     }
 
     const valid = await foundUser.verifyPassword(user.password);
-    if (!valid) return res.status(403).json({ message: "Email or password are not correct." });
+    if (!valid)
+      return res
+        .status(403)
+        .json({ message: "Email or password are not correct." });
     const token = jwt.sign({ id: foundUser._id }, JWT_SECRET, {
       expiresIn: "24h",
     });
@@ -157,9 +166,11 @@ export const getUserBooks = async (req, res) => {
         select: "firstName lastName",
       },
     });
+    userData.books = userData.books.filter((book) => book.bookId !== null);
     if (shelve) {
       userData.books = userData.books.filter((book) => book.shelve === shelve);
     }
+
     res.json({ books: userData.books, booksCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -175,7 +186,8 @@ export const addUserBook = async (req, res) => {
     if (!book) return res.status(404).json({ message: "Book doesn't exist" });
     if (books.some((book) => book.bookId == bookId))
       return res.status(403).json({ message: "Book already added" });
-
+    book.clicks++;
+    await book.save();
     user.books.push({ bookId: new mongoose.Types.ObjectId(bookId) });
     await user.save();
     res.json(user.toJSON());

@@ -41,7 +41,8 @@ export const getAllBooks = async (req, res) => {
       .populate("category", "name")
       .populate("author", "firstName lastName")
       .limit(Limit)
-      .skip(Skip);
+      .skip(Skip)
+      .sort({ clicks: -1 });
     res.status(200).json({ books, booksCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -75,14 +76,14 @@ export const getBookById = async (req, res) => {
       .populate("category", "name")
       .populate("author", "firstName lastName")
       .populate({
-        path: "reviews", 
+        path: "reviews",
         populate: {
-        path: "author",
-        select:"firstName lastName image"
+          path: "author",
+          select: "firstName lastName image",
         },
-      }); 
-    
-      if (!book) {
+      });
+
+    if (!book) {
       return res.status(404).json({ message: "Book not found" });
     }
     res.status(200).json(book);

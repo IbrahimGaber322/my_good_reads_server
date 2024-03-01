@@ -1,5 +1,5 @@
 import Author from "../models/author.js";
-
+import fs from "fs/promises";
 export const createAuthor = async (req, res) => {
   const { filePath } = req;
   try {
@@ -16,7 +16,12 @@ export const createAuthor = async (req, res) => {
 
 export const getAllAuthors = async (req, res) => {
   const { page, limit } = req.query;
+  const { firstName } = req.query;
   try {
+    const query = {};
+    if (firstName) {
+      query.firstName = new RegExp(firstName, "i");
+    }
     const Page = Math.max(Number(page) || 1, 1);
 
     const Limit = Math.max(Number(limit) || 10, 1);
@@ -27,7 +32,7 @@ export const getAllAuthors = async (req, res) => {
     if (Skip >= authorsCount) {
       return res.status(404).json({ message: "this page doesnt exist" });
     }
-    const authors = await Author.find();
+    const authors = await Author.find(query);
     res.status(200).json({ authors, authorsCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -65,6 +70,12 @@ export const deleteAuthor = async (req, res) => {
     const deletedAuthor = await Author.findByIdAndDelete(req.params.id);
     if (!deletedAuthor) {
       return res.status(404).json({ message: "Author not found" });
+    }
+    const imageUrl = deletedAuthor.image;
+    if (imageUrl) {
+      const parsedUrl = new URL(imageUrl);
+      const pathAfterHostname = parsedUrl.pathname;
+      await fs.unlink(pathAfterHostname.slice(1));
     }
     res.status(200).json({ message: "Author deleted successfully" });
   } catch (error) {

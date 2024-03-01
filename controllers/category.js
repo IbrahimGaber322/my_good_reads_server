@@ -11,7 +11,12 @@ export const createCategory = async (req, res) => {
 };
 export const getAllCategories = async (req, res) => {
   const { page, limit } = req.query;
+  const { name } = req.query;
   try {
+    const query = {};
+    if (name) {
+      query.name = new RegExp(name, "i");
+    }
     const Page = Math.max(Number(page) || 1, 1);
 
     const Limit = Math.max(Number(limit) || 10, 1);
@@ -23,7 +28,7 @@ export const getAllCategories = async (req, res) => {
       return res.status(404).json({ message: "this page doesnt exist" });
     }
 
-    const categories = await Category.find().limit(Limit).skip(Skip);
+    const categories = await Category.find(query).limit(Limit).skip(Skip);
     res.json({ categories, categoriesCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -57,6 +62,18 @@ export const updateCategory = async (req, res) => {
       return res.status(404).json({ message: "Category not found" });
     }
     res.json(category);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deleteCategory = async (req, res) => {
+  try {
+    const deletedCategory = await Category.findByIdAndDelete(req.params.id);
+    if (!deletedCategory) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+    res.status(200).json({ message: "Category deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

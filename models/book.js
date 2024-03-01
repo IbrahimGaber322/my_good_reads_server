@@ -31,7 +31,7 @@ const bookSchema = mongoose.Schema({
   },
   image: String,
   reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
-  clicks: Number,
+  clicks: { type: Number, default: 0 },
 });
 
 const BookCounter = mongoose.model("BookCounter", counterSchema);
