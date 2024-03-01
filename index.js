@@ -1,10 +1,8 @@
-import "./config/fetch-polyfill.js";
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import routes from "./routes/index.js";
-import fs from "fs";
 
 dotenv.config();
 
@@ -18,13 +16,6 @@ app.use("/uploads", express.static("uploads"));
 app.use(cors());
 
 app.use("/", routes);
-
-// Check if the uploads folder exists, if not, create it
-const uploadsFolder = "./uploads";
-if (!fs.existsSync(uploadsFolder)) {
-  fs.mkdirSync(uploadsFolder);
-}
-
 
 mongoose
   .connect(DB, { dbName: "goodreads" })

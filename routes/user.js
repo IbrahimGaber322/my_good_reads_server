@@ -13,7 +13,8 @@ import {
 } from "../controllers/user.js";
 import user from "../middleware/user.js";
 import admin from "../middleware/admin.js";
-import upload from '../middleware/upload.js';
+import { upload, uploadMiddleware } from "../middleware/upload.js";
+
 const router = express.Router();
 
 /* ------------ */
@@ -21,7 +22,7 @@ const router = express.Router();
 /* router.get("/:id", getUser);  */
 /* ------------ */
 router.get("/", getUsers);
-router.post("/", upload.single("image"), signUp);
+router.post("/", upload.single('image'), uploadMiddleware, signUp);
 router.patch("/", user, admin, editUser);
 router.post("/login", login);
 
