@@ -22,6 +22,7 @@ const transporter = nodemailer.createTransport({
 
 export const signUp = async (req, res) => {
   const user = req.body;
+  console.log(user)
   try {
     const existingUser = await User.findOne({ email: user.email });
     if (existingUser)
