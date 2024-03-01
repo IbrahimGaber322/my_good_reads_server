@@ -13,15 +13,17 @@ const FRONT_URL = process.env.FRONT_URL;
 const app = express();
 app.use(express.json({ limit: "50mb" }));
 app.use("/uploads", express.static("uploads"));
-app.use(
-  cors({
-    origin: FRONT_URL,
-    methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
-    allowedHeaders: true,
-    credentials: true,
-  })
-);
-
+app.use(cors());
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", true);
+  res.header("Access-Control-Allow-Credentials", true);
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, OPTIONS, PUT, PATCH, DELETE"
+  );
+  next();
+});
 app.use("/", routes);
 
 mongoose
