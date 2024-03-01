@@ -73,8 +73,16 @@ export const getBookById = async (req, res) => {
   try {
     const book = await Book.findById(req.params.id)
       .populate("category", "name")
-      .populate("author", "firstName lastName");
-    if (!book) {
+      .populate("author", "firstName lastName")
+      .populate({
+        path: "reviews", 
+        populate: {
+        path: "author",
+        select:"firstName lastName image"
+        },
+      }); 
+    
+      if (!book) {
       return res.status(404).json({ message: "Book not found" });
     }
     res.status(200).json(book);
