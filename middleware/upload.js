@@ -4,15 +4,14 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
-import dotenv from "dotenv";
-dotenv.config();
+import { CLOUD_NAME, API_KEY, API_SECRET } from "../secrets.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.API_KEY,
-  api_secret: process.env.API_SECRET,
+  cloud_name: CLOUD_NAME,
+  api_key: API_KEY,
+  api_secret: API_SECRET,
 });
 
 const upload = multer({ storage: multer.memoryStorage() });

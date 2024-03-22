@@ -120,6 +120,28 @@ export const editBook = async (req, res) => {
   }
 };
 
+//add rating
+export const addRating = async (req, res) => {
+  const { rating } = req.body;
+  const { user } = req;
+  const { id: bookId } = req.params;
+  try {
+    const book = await Book.findById(bookId);
+    if (!book) return res.status(404).json({ message: "Book doesn't exist." });
+    const index = book.rating.findIndex((r) => r.userId === user._id);
+    if (index === -1) {
+      book.rating.push({ userId: user._id, rating });
+      await book.save();
+      return res.status(200).json({ message: "Rating added successfully." });
+    }
+    book.rating[index] = { ...book.rating[index], rating };
+    await book.save();
+    res.status(200).json({ message: "Rating added successfully." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // DELETE book by ID (must be admin)
 export const deleteBook = async (req, res) => {
   try {

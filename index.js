@@ -1,14 +1,8 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import dotenv from "dotenv";
 import routes from "./routes/index.js";
-
-dotenv.config();
-
-const PORT = process.env.PORT;
-const DB = process.env.DB;
-const FRONT_URL = process.env.FRONT_URL;
+import { DB, PORT } from "./secrets.js";
 
 const app = express();
 app.use(cors());

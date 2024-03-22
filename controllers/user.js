@@ -1,16 +1,15 @@
-import dotenv from "dotenv";
-dotenv.config();
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import mongoose from "mongoose";
 import Book from "../models/book.js";
-
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
-const JWT_SECRET = process.env.JWT_SECRET;
-const FRONT_URL = process.env.FRONT_URL;
+import {
+  EMAIL_USER,
+  EMAIL_PASSWORD,
+  JWT_SECRET,
+  FRONT_URL,
+} from "../secrets.js";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -113,11 +112,9 @@ export const login = async (req, res) => {
         }
       });
 
-      return res
-        .status(200)
-        .json({
-          message: `Your email needs to be confirmed, confirmation email sent to ${user.email}`,
-        });
+      return res.status(200).json({
+        message: `Your email needs to be confirmed, confirmation email sent to ${user.email}`,
+      });
     }
 
     const valid = await foundUser.verifyPassword(user.password);
